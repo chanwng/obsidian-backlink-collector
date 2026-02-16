@@ -5,6 +5,6 @@
 	"minAppVersion": "0.15.0",
 	"description": "Collect all backlinks to a note and compile them into a single organized document with full context.",
 	"author": "chanwng",
-	"authorUrl": "https://github.com/chanwng/obsidian-backlink-collector",
+	"authorUrl": "https://github.com/chanwng",
 	"isDesktopOnly": false
 }
