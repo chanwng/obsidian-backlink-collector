@@ -29,7 +29,7 @@ __export(main_exports, {
 module.exports = __toCommonJS(main_exports);
 var import_obsidian = require("obsidian");
 var DEFAULT_SETTINGS = {
-  outputFolder: ""
+  outputFolder: "Backlinks"
 };
 var BacklinkCollectorPlugin = class extends import_obsidian.Plugin {
   async onload() {
@@ -74,7 +74,7 @@ var BacklinkCollectorPlugin = class extends import_obsidian.Plugin {
     const allFiles = this.app.vault.getMarkdownFiles();
     const backlinks = [];
     for (const file of allFiles) {
-      if (file.basename.endsWith("_backlinks")) {
+      if (this.settings.outputFolder && file.path.startsWith(this.settings.outputFolder + "/")) {
         continue;
       }
       const content = await this.app.vault.read(file);
@@ -181,7 +181,7 @@ var BacklinkCollectorSettingTab = class extends import_obsidian.PluginSettingTab
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    new import_obsidian.Setting(containerEl).setName("Output folder").setDesc("\uBC31\uB9C1\uD06C \uBB38\uC11C\uB97C \uC800\uC7A5\uD560 \uD3F4\uB354 (\uBE44\uC5B4\uC788\uC73C\uBA74 vault \uB8E8\uD2B8\uC5D0 \uC800\uC7A5)").addText((text) => text.setPlaceholder("\uC608: Backlinks").setValue(this.plugin.settings.outputFolder).onChange(async (value) => {
+    new import_obsidian.Setting(containerEl).setName("Output folder").setDesc("\uBC31\uB9C1\uD06C \uBB38\uC11C\uB97C \uC800\uC7A5\uD560 \uD3F4\uB354. \uC774 \uD3F4\uB354 \uC548\uC758 \uD30C\uC77C\uB4E4\uC740 \uBC31\uB9C1\uD06C \uAC80\uC0C9\uC5D0\uC11C \uC790\uB3D9\uC73C\uB85C \uC81C\uC678\uB429\uB2C8\uB2E4.").addText((text) => text.setPlaceholder("Backlinks").setValue(this.plugin.settings.outputFolder).onChange(async (value) => {
       this.plugin.settings.outputFolder = value;
       await this.plugin.saveSettings();
     }));

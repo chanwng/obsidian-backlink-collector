@@ -5,7 +5,7 @@ interface BacklinkCollectorSettings {
 }
 
 const DEFAULT_SETTINGS: BacklinkCollectorSettings = {
-	outputFolder: ''
+	outputFolder: 'Backlinks'
 }
 
 export default class BacklinkCollectorPlugin extends Plugin {
@@ -75,8 +75,8 @@ export default class BacklinkCollectorPlugin extends Plugin {
 
 		// 각 파일에서 백링크 찾기
 		for (const file of allFiles) {
-			// 백링크 문서 자체는 제외 (재귀 방지)
-			if (file.basename.endsWith('_backlinks')) {
+			// 설정된 출력 폴더 안의 파일들은 제외 (재귀 방지)
+			if (this.settings.outputFolder && file.path.startsWith(this.settings.outputFolder + '/')) {
 				continue;
 			}
 
@@ -221,9 +221,9 @@ class BacklinkCollectorSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Output folder')
-			.setDesc('백링크 문서를 저장할 폴더 (비어있으면 vault 루트에 저장)')
+			.setDesc('백링크 문서를 저장할 폴더. 이 폴더 안의 파일들은 백링크 검색에서 자동으로 제외됩니다.')
 			.addText(text => text
-				.setPlaceholder('예: Backlinks')
+				.setPlaceholder('Backlinks')
 				.setValue(this.plugin.settings.outputFolder)
 				.onChange(async (value) => {
 					this.plugin.settings.outputFolder = value;
