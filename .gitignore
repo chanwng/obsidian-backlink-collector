@@ -1,0 +1,12 @@
+# npm
+node_modules
+package-lock.json
+
+# build (keep main.js for releases)
+*.js.map
+
+# obsidian
+data.json
+
+# OS
+.DS_Store
