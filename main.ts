@@ -1,4 +1,4 @@
-import { App, Modal, Notice, Plugin, TFile, PluginSettingTab, Setting } from 'obsidian';
+import { App, Notice, Plugin, TFile, PluginSettingTab, Setting } from 'obsidian';
 
 interface BacklinkCollectorSettings {
 	outputFolder: string;
@@ -21,7 +21,7 @@ export default class BacklinkCollectorPlugin extends Plugin {
 			callback: () => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (activeFile) {
-					this.collectBacklinks(activeFile);
+					void this.collectBacklinks(activeFile);
 				} else {
 					new Notice('No active note found');
 				}
@@ -46,10 +46,29 @@ export default class BacklinkCollectorPlugin extends Plugin {
 
 		// 설정 탭 추가
 		this.addSettingTab(new BacklinkCollectorSettingTab(this.app, this));
+
+		// URI 프로토콜 등록 (Refresh 링크용)
+		this.registerObsidianProtocolHandler('backlink-collector-refresh', async (params) => {
+			const noteName = params.note;
+			if (!noteName) {
+				new Notice('No note name provided');
+				return;
+			}
+
+			// 노트 파일 찾기
+			const files = this.app.vault.getMarkdownFiles();
+			const targetFile = files.find(f => f.basename === noteName);
+
+			if (targetFile) {
+				await this.collectBacklinks(targetFile);
+			} else {
+				new Notice(`Note "${noteName}" not found`);
+			}
+		});
 	}
 
 	onunload() {
-		console.log('Backlink Collector plugin unloaded');
+		// cleanup handled by Obsidian
 	}
 
 	async loadSettings() {
@@ -187,13 +206,15 @@ export default class BacklinkCollectorPlugin extends Plugin {
 		return { count: matches.length, contexts };
 	}
 
-	generateBacklinkDocument(targetNoteName: string, backlinks: any[]): string {
-		let content = '';
+	generateBacklinkDocument(targetNoteName: string, backlinks: Array<{ fileName: string; filePath: string; count: number; contexts: string[] }>): string {
+		// Refresh 링크 추가
+		const refreshUrl = `obsidian://backlink-collector-refresh?note=${encodeURIComponent(targetNoteName)}`;
+		let content = `[🔄 Refresh](${refreshUrl})\n\n---\n\n`;
 
 		backlinks.forEach((backlink, index) => {
 			content += `[[${backlink.fileName}]]\n\n`;
 
-			backlink.contexts.forEach((context: string, ctxIndex: number) => {
+			backlink.contexts.forEach((context: string) => {
 				content += `${context}\n\n`;
 			});
 

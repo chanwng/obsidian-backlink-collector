@@ -40,7 +40,7 @@ var BacklinkCollectorPlugin = class extends import_obsidian.Plugin {
       callback: () => {
         const activeFile = this.app.workspace.getActiveFile();
         if (activeFile) {
-          this.collectBacklinks(activeFile);
+          void this.collectBacklinks(activeFile);
         } else {
           new import_obsidian.Notice("No active note found");
         }
@@ -58,9 +58,22 @@ var BacklinkCollectorPlugin = class extends import_obsidian.Plugin {
       })
     );
     this.addSettingTab(new BacklinkCollectorSettingTab(this.app, this));
+    this.registerObsidianProtocolHandler("backlink-collector-refresh", async (params) => {
+      const noteName = params.note;
+      if (!noteName) {
+        new import_obsidian.Notice("No note name provided");
+        return;
+      }
+      const files = this.app.vault.getMarkdownFiles();
+      const targetFile = files.find((f) => f.basename === noteName);
+      if (targetFile) {
+        await this.collectBacklinks(targetFile);
+      } else {
+        new import_obsidian.Notice(`Note "${noteName}" not found`);
+      }
+    });
   }
   onunload() {
-    console.log("Backlink Collector plugin unloaded");
   }
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -154,12 +167,17 @@ var BacklinkCollectorPlugin = class extends import_obsidian.Plugin {
     return { count: matches.length, contexts };
   }
   generateBacklinkDocument(targetNoteName, backlinks) {
-    let content = "";
+    const refreshUrl = `obsidian://backlink-collector-refresh?note=${encodeURIComponent(targetNoteName)}`;
+    let content = `[\u{1F504} Refresh](${refreshUrl})
+
+---
+
+`;
     backlinks.forEach((backlink, index) => {
       content += `[[${backlink.fileName}]]
 
 `;
-      backlink.contexts.forEach((context, ctxIndex) => {
+      backlink.contexts.forEach((context) => {
         content += `${context}
 
 `;
